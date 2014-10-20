@@ -33,7 +33,7 @@ send_like(To, MsgId, Status) ->
 	send_packet_all_resources("hashtag.local", To, Packet).
 
 build_packet(message_test, [MsgId, Status]) ->
-	{xmlelement, "notify",
+	{xmlelement, "presence",
 		[{"type", "msg_like"}],
 		[{xmlelement, "item", [{"msg_id", MsgId}, {"status", Status}], []}]
 	}.

@@ -4,17 +4,16 @@
 -behavior(gen_mod).
 
 -export([start/2, stop/1]).
--export([send_like/4]).
+-export([send_like/6]).
 
 -include("ejabberd.hrl").
 -include("jlib.hrl").
 -include("ejabberd_commands.hrl").
 
-start(_Host, Opts) ->
+-define(SendFrom, "admin@localhost"). %% Edit this config constant
+
+start(_Host, _Opts) ->
 	?INFO_MSG("mod_like_msg starting", []),
-	SendFrom = gen_mod:get_opt(send_from, Opts, ""),
-	ets:new(custom_msg, [named_table, protected, set, {keypos, 1}]),
-  	ets:insert(custom_msg, {send_from, SendFrom}),
   	ejabberd_commands:register_commands(commands()).
 
 stop(_Host) ->
@@ -26,19 +25,18 @@ commands() ->
 	#ejabberd_commands{name = send_like, tags = [like],
 		desc = "Send notifikations about liked message",
 		module = ?MODULE, function = send_like,
-		args = [{to, string}, {msg_id, string}, {status, string}, {username, string}],
+		args = [{to, string}, {msg_id, string}, {status, string}, {username, string}, {timestamp, string}, {jid, string}],
 		result = {res, rescode}}
     ].
 
-send_like(To, MsgId, Status, Username) ->
-	Packet = build_packet(message_like, [MsgId, Status, Username]),
-	[{_, SendFrom}] = ets:lookup(custom_msg, send_from),
-	send_packet_all_resources(SendFrom, To, Packet).
+send_like(To, MsgId, Status, Username, Timestamp, Jid) ->
+	Packet = build_packet(message_like, [MsgId, Status, Username, Timestamp, Jid]),
+	send_packet_all_resources(?SendFrom, To, Packet).
 
-build_packet(message_like, [MsgId, Status, Username]) ->
+build_packet(message_like, [MsgId, Status, Username, Timestamp, Jid]) ->
 	{xmlelement, "presence",
 		[{"type", "msg_like"}],
-		[{xmlelement, "item", [{"msg_id", MsgId}, {"status", Status}, {"username", Username}], []}]
+		[{xmlelement, "item", [{"msg_id", MsgId}, {"status", Status}, {"username", Username}, {"timestamp", Timestamp}, {"jid", Jid}], []}]
 	}.
 
 send_packet_all_resources(FromJIDString, ToJIDString, Packet) ->

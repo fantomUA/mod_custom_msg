@@ -4,7 +4,7 @@
 -behavior(gen_mod).
 
 -export([start/2, stop/1]).
--export([send_like/6]).
+-export([send_like/6, send_flag/5]).
 
 -include("ejabberd.hrl").
 -include("jlib.hrl").
@@ -26,6 +26,11 @@ commands() ->
 		desc = "Send notifikations about liked message",
 		module = ?MODULE, function = send_like,
 		args = [{to, string}, {msg_id, string}, {status, string}, {username, string}, {timestamp, string}, {jid, string}],
+		result = {res, rescode}},
+	#ejabberd_commands{name = send_flag, tags = [like],
+		desc = "Send notifikations about liked message",
+		module = ?MODULE, function = send_flag,
+		args = [{to, string}, {msg_id, string}, {status, string}, {username, string}, {timestamp, string}],
 		result = {res, rescode}}
     ].
 
@@ -33,10 +38,19 @@ send_like(To, MsgId, Status, Username, Timestamp, Jid) ->
 	Packet = build_packet(message_like, [MsgId, Status, Username, Timestamp, Jid]),
 	send_packet_all_resources(?SendFrom, To, Packet).
 
+send_flag(To, MsgId, Status, Username, Timestamp) ->
+	Packet = build_packet(message_flag, [MsgId, Status, Username, Timestamp]),
+	send_packet_all_resources(?SendFrom, To, Packet).
+
 build_packet(message_like, [MsgId, Status, Username, Timestamp, Jid]) ->
 	{xmlelement, "presence",
 		[{"type", "msg_like"}],
 		[{xmlelement, "item", [{"msg_id", MsgId}, {"status", Status}, {"username", Username}, {"timestamp", Timestamp}, {"jid", Jid}], []}]
+	};
+build_packet(message_flag, [MsgId, Status, Username, Timestamp]) ->
+	{xmlelement, "presence",
+		[{"type", "msg_flag"}],
+		[{xmlelement, "item", [{"msg_id", MsgId}, {"status", Status}, {"username", Username}, {"timestamp", Timestamp}], []}]
 	}.
 
 send_packet_all_resources(FromJIDString, ToJIDString, Packet) ->

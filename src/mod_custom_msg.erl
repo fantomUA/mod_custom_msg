@@ -4,7 +4,7 @@
 -behavior(gen_mod).
 
 -export([start/2, stop/1]).
--export([send_like/6, send_flag/5]).
+-export([send_like/6, send_flag/5, send_expire/5]).
 
 -include("ejabberd.hrl").
 -include("jlib.hrl").
@@ -22,15 +22,20 @@ stop(_Host) ->
 
 commands() ->
     [
-	#ejabberd_commands{name = send_like, tags = [like],
+	#ejabberd_commands{name = send_like, tags = [custom_msg],
 		desc = "Send notifikations about liked message",
 		module = ?MODULE, function = send_like,
 		args = [{to, string}, {msg_id, string}, {status, string}, {username, string}, {timestamp, string}, {jid, string}],
 		result = {res, rescode}},
-	#ejabberd_commands{name = send_flag, tags = [like],
-		desc = "Send notifikations about liked message",
+	#ejabberd_commands{name = send_flag, tags = [custom_msg],
+		desc = "Send notifikations about flagged message",
 		module = ?MODULE, function = send_flag,
 		args = [{to, string}, {msg_id, string}, {status, string}, {username, string}, {timestamp, string}],
+		result = {res, rescode}},
+    #ejabberd_commands{name = send_expire, tags = [custom_msg],
+		desc = "Send notifikations about expired room",
+		module = ?MODULE, function = send_expire,
+		args = [{to, string}, {name, string}, {jid, string}, {status, string}, {timestamp, string}],
 		result = {res, rescode}}
     ].
 
@@ -42,6 +47,10 @@ send_flag(To, MsgId, Status, Username, Timestamp) ->
 	Packet = build_packet(message_flag, [MsgId, Status, Username, Timestamp]),
 	send_packet_all_resources(?SendFrom, To, Packet).
 
+send_expire(To, Name, Jid, Status, Timestamp) ->
+	Packet = build_packet(message_expire, [Name, Jid, Status, Timestamp]),
+	send_packet_all_resources(?SendFrom, To, Packet).
+
 build_packet(message_like, [MsgId, Status, Username, Timestamp, Jid]) ->
 	{xmlelement, "presence",
 		[{"type", "msg_like"}],
@@ -51,6 +60,11 @@ build_packet(message_flag, [MsgId, Status, Username, Timestamp]) ->
 	{xmlelement, "presence",
 		[{"type", "msg_flag"}],
 		[{xmlelement, "item", [{"msg_id", MsgId}, {"status", Status}, {"username", Username}, {"timestamp", Timestamp}], []}]
+	};
+build_packet(message_expire, [Name, Jid, Status, Timestamp]) ->
+	{xmlelement, "presence",
+		[{"type", "msg_expire"}],
+		[{xmlelement, "item", [{"name", Name}, {"jid", Jid}, {"status", Status}, {"timestamp", Timestamp}], []}]
 	}.
 
 send_packet_all_resources(FromJIDString, ToJIDString, Packet) ->

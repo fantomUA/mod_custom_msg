@@ -6,6 +6,7 @@
 -export([start/2, stop/1]).
 -export([send_like/6, send_flag/5, send_expire/5]).
 
+%%-include("ns.hrl").
 -include("ejabberd.hrl").
 -include("jlib.hrl").
 -include("ejabberd_commands.hrl").
@@ -13,11 +14,11 @@
 -define(SendFrom, "admin@localhost"). %% Edit this config constant
 
 start(_Host, _Opts) ->
-	?INFO_MSG("mod_like_msg starting", []),
+	error_logger:info_msg("mod_like_msg starting", []),
   	ejabberd_commands:register_commands(commands()).
 
 stop(_Host) ->
-	?INFO_MSG("mod_like_msg stopping", []),
+	error_logger:info_msg("mod_like_msg stopping", []),
 	ejabberd_commands:unregister_commands(commands()).	
 
 commands() ->

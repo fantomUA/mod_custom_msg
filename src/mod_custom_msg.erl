@@ -24,17 +24,17 @@ stop(_Host) ->
 commands() ->
     [
 	#ejabberd_commands{name = send_like, tags = [custom_msg],
-		desc = "Send notifikations about liked message",
+		desc = "Send notify about liked message",
 		module = ?MODULE, function = send_like,
 		args = [{to, string}, {msg_id, string}, {status, string}, {username, string}, {timestamp, string}, {jid, string}],
 		result = {res, rescode}},
 	#ejabberd_commands{name = send_flag, tags = [custom_msg],
-		desc = "Send notifikations about flagged message",
+		desc = "Send notify about flagged message",
 		module = ?MODULE, function = send_flag,
 		args = [{to, string}, {msg_id, string}, {status, string}, {username, string}, {timestamp, string}],
 		result = {res, rescode}},
     #ejabberd_commands{name = send_expire, tags = [custom_msg],
-		desc = "Send notifikations about expired room",
+		desc = "Send notify about expired room",
 		module = ?MODULE, function = send_expire,
 		args = [{to, string}, {name, string}, {jid, string}, {status, string}, {timestamp, string}],
 		result = {res, rescode}}
